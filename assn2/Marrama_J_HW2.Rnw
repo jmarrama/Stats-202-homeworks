@@ -1,0 +1,172 @@
+\documentclass{report}
+\usepackage[latin1]{inputenc}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+%\usepackage{cancel}
+\usepackage[top=3.5cm,left=3cm,right=3cm,bottom=2cm,foot=1cm]{geometry}
+\renewcommand{\thesection}{\arabic{section}}
+
+\title{\textbf{Stats 202} \\ Homework 2}
+\author{\textbf{Joseph Marrama}}
+\date{October 15, 2011}
+
+\begin{document}
+\maketitle
+
+\section*{Problem 1}
+
+<<>>=
+X = read.table('weather.csv', sep="|", header=TRUE)
+dates = X[,1]
+X = t( X[,2:dim(X)[2]] )
+dim(X)
+@
+
+As you can see, X is a 144 by 3574 matrix
+
+\subsubsection*{b}
+
+If we were to take the SVD of X, where $X = UDV^T$, we would expect the first column of $U$ to capture a strong pattern among the rows of $X$, which in this case are the cities. So, we would expect to see it contain a vector that captures a subset of the cities where the weather is correlated. Conversely, in the first columns of $V$, we would expect to see vectors that capture the correlations between different days of weather. The first vector of $V$ is likely to capture dates in which the weather is correlated (and since the weather is taken from a time-series, we would see correlations between adjacent days). 
+
+\subsubsection*{c}
+
+<<>>=
+res = svd(X)
+@
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=10, height=7>>=
+plot(res$u[,1])
+@
+\caption{The first column of u}
+\end{center}
+\end{figure} 
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=10, height=7>>=
+plot(res$v[,1])
+@
+\caption{The first column of V}
+\end{center}
+\end{figure} 
+
+As you can see, there isn't much immediately obvious structure in the first column of U. However, in the first column of V, there is a very obvious sinusoidal structure to the data. As stated earlier, this vector captures a basic correlation between temperatures in different days, which is verified by this plot. Note that the data was captured from the beginning of 1995 until almost the end of 2004, which is 10 years, and that the sine-wave-like graph of the first column of V has almost 10 cycles. Also note that each cycle appears to be around 300 to 400 days. All this would indicate that each cycle of the sine wave indicates a years worth of rising and dropping temperatures due to the different seasons. 
+
+\subsubsection*{d}
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=10, height=7>>=
+plot(res$d, ylim=c(0, 5000))
+@
+\caption{The singular values of X}
+\end{center}
+\end{figure} 
+
+This plot would seem to suggest that the first few singular components are by far the more important components of the data matrix $X$, because the first few are much higher and separated from the others. I would estimate that there are around 10 important dimensions in the matrix, because around the 10th component they all strongly bunch together.
+
+
+\subsubsection*{e}
+
+<<>>=
+X[X == -99] <- NA
+rmeans = rowMeans(X, na.rm=T)
+d = dim(X)
+for(i in 1:d[1]) {
+rtemp = X[i,]
+rtemp[is.na(rtemp)] <- rmeans[i]
+X[i,] = rtemp
+}
+@
+
+\subsubsection*{f}
+
+Changing in the missing values with the mean temperature of each city doesn't have much affect on the first column of U, which capture correlations between cities, but it does have a noticeable effect on the first column of V. It removes the outliers of the first column of V, and its structure now more closely mirrors that of a sine wave. The few outliers on the original first column of U were probably due to those days having many -99 values.
+
+<<>>=
+res = svd(X)
+@
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=10, height=7>>=
+plot(res$u[,1])
+@
+\caption{The first column of U with missing values replaced by means in X}
+\end{center}
+\end{figure} 
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=10, height=7>>=
+plot(res$v[,1])
+@
+\caption{The first column of V with missing values replaced by means in X}
+\end{center}
+\end{figure} 
+
+\subsubsection*{g and Bonus}
+
+Yes, the location data can certainly be used to determine structure in the data. Because we would expect cities that are close together to have correlated temperatures, there are likely similarities in the average temperature and the values in the first column in $U$ for cities that are close together. One way we could do it would be to plot each city with the x and y axes as latitude and longitude and then use either average temperature or corresponding first components of the first vector in $U$. The plot with average temperature as color is shown in figure 6.
+
+<<>>=
+locs = read.table('locations.csv', sep=",", header=T)
+ufirst = res$u[,1]
+toplot = cbind(locs, rmeans, ufirst)
+@
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=10, height=7>>=
+plot(toplot$lat, toplot$lng, xlab='Latitude', ylab='Longitude')
+@
+\caption{Cities plotted by location and colored by average temperature}
+\end{center}
+\end{figure} 
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
