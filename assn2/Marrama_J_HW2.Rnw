@@ -127,6 +127,41 @@ plot(toplot$lat, toplot$lng, xlab='Latitude', ylab='Longitude')
 \end{center}
 \end{figure} 
 
+%%%%%%%%%%%% todo - get color and figure out if anything else needs to be done
+% unclass
+
+\section*{Problem 2}
+
+
+<<>>=
+votes = read.table('2010_cleaned_votes.csv', sep=";", header=T)
+A = votes[sample(1:dim(votes)[1], 200) , ]
+@
+
+\subsubsection*{b}
+
+%%%%%%%%%%%%%% does the transpose multiplication get you euclidian distance?  yuppppp
+
+\subsubsection*{c}
+%%%% for pca, import library, and follow examples pretty much
+
+
+\subsubsection*{d}
+
+
+\subsubsection*{e}
+
+\section*{Problem 3}
+
+%%%%%%%%%%%%% 
+
+
+\section*{Problem 4}
+
+
+
+
+
 \end{document}
 
 
