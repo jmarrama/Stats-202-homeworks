@@ -136,11 +136,20 @@ plot(toplot$lat, toplot$lng, xlab='Latitude', ylab='Longitude')
 <<>>=
 votes = read.table('2010_cleaned_votes.csv', sep=";", header=T)
 A = votes[sample(1:dim(votes)[1], 200) , ]
+Av = A[,2:dim(A)[2]]
+Av = data.matrix(Av)
 @
 
 \subsubsection*{b}
 
 %%%%%%%%%%%%%% does the transpose multiplication get you euclidian distance?  yuppppp
+
+<<>>=
+n = nrow(Av)
+D = sqrt((outer(rep(1,n), diag(sim)) - 2*sim + outer(diag(sim), rep(1,n))))
+D = as.dist(D)
+MDS = cmdscale(D)
+@
 
 \subsubsection*{c}
 %%%% for pca, import library, and follow examples pretty much
