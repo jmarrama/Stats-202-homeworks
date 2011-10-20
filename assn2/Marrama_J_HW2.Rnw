@@ -40,7 +40,7 @@ res = svd(X)
 <<fig=true, width=10, height=7>>=
 plot(res$u[,1])
 @
-\caption{The first column of u}
+\caption{(Problem 1.c) The first column of u}
 \end{center}
 \end{figure} 
 
@@ -49,7 +49,7 @@ plot(res$u[,1])
 <<fig=true, width=10, height=7>>=
 plot(res$v[,1])
 @
-\caption{The first column of V}
+\caption{(Problem 1.c) The first column of V}
 \end{center}
 \end{figure} 
 
@@ -62,7 +62,7 @@ As you can see, there isn't much immediately obvious structure in the first colu
 <<fig=true, width=10, height=7>>=
 plot(res$d, ylim=c(0, 5000))
 @
-\caption{The singular values of X}
+\caption{(Problem 1.d) The singular values of X}
 \end{center}
 \end{figure} 
 
@@ -95,7 +95,7 @@ res = svd(X)
 <<fig=true, width=10, height=7>>=
 plot(res$u[,1])
 @
-\caption{The first column of U with missing values replaced by means in X}
+\caption{(Problem 1.f) The first column of U with missing values replaced by means in X}
 \end{center}
 \end{figure} 
 
@@ -104,31 +104,40 @@ plot(res$u[,1])
 <<fig=true, width=10, height=7>>=
 plot(res$v[,1])
 @
-\caption{The first column of V with missing values replaced by means in X}
+\caption{(Problem 1.f) The first column of V with missing values replaced by means in X}
 \end{center}
 \end{figure} 
 
 \subsubsection*{g and Bonus}
 
-Yes, the location data can certainly be used to determine structure in the data. Because we would expect cities that are close together to have correlated temperatures, there are likely similarities in the average temperature and the values in the first column in $U$ for cities that are close together. One way we could do it would be to plot each city with the x and y axes as latitude and longitude and then use either average temperature or corresponding first components of the first vector in $U$. The plot with average temperature as color is shown in figure 6.
+Yes, the location data can certainly be used to determine structure in the data. Because we would expect cities that are close together to have correlated temperatures, there are likely similarities in the average temperature and the values in the first column in $U$ for cities that are close together. One way we could do it would be to plot each city with the x and y axes as latitude and longitude and then use either average temperature or corresponding first components of the first vector in $U$ to color the points. The plot with average temperature as color is shown in figure 6. As this plot shows, cities at a lower latitude generally have a higher average temperature, and cities at a higher latitude have colder temperatures. It is interesting to note that cities in the Pacific Northwest generally have slightly higher temperatures than those in the upper midwest. The plot of the first component of $U$ also reveals a very similar (but reversed) pattern. Cities farther north have larger values in $U$, and cities farther south have lower values.  
 
 <<>>=
 locs = read.table('locations.csv', sep=",", header=T)
 ufirst = res$u[,1]
 toplot = cbind(locs, rmeans, ufirst)
+toplot <- data.matrix(toplot)
+library(ggplot2)
 @
 
 \begin{figure}
 \begin{center}
 <<fig=true, width=10, height=7>>=
-plot(toplot$lat, toplot$lng, xlab='Latitude', ylab='Longitude')
+print(qplot(toplot[,3], toplot[,2], colour=toplot[,4], ylab='Latitude', xlab='Longitude') + scale_colour_gradient("Mean temperature", low="blue", high="red"))
 @
-\caption{Cities plotted by location and colored by average temperature}
+\caption{(Problem 1.g) Cities plotted by location and colored by average temperature}
 \end{center}
 \end{figure} 
 
-%%%%%%%%%%%% todo - get color and figure out if anything else needs to be done
-% unclass
+\begin{figure}
+\begin{center}
+<<fig=true, width=10, height=7>>=
+print(qplot(toplot[,3], toplot[,2], colour=toplot[,5], ylab='Latitude', xlab='Longitude') + scale_colour_gradient("First component of U", low="blue", high="red"))
+@
+\caption{(Problem 1.bonus) Cities plotted by location and colored by first component of U}
+\end{center}
+\end{figure} 
+
 
 \section*{Problem 2}
 
@@ -136,6 +145,7 @@ plot(toplot$lat, toplot$lng, xlab='Latitude', ylab='Longitude')
 <<>>=
 votes = read.table('2010_cleaned_votes.csv', sep=";", header=T)
 A = votes[sample(1:dim(votes)[1], 200) , ]
+party = A[,1]
 Av = A[,2:dim(A)[2]]
 Av = data.matrix(Av)
 @
@@ -145,30 +155,264 @@ Av = data.matrix(Av)
 %%%%%%%%%%%%%% does the transpose multiplication get you euclidian distance?  yuppppp
 
 <<>>=
+sim = Av %*% t(Av)
 n = nrow(Av)
 D = sqrt((outer(rep(1,n), diag(sim)) - 2*sim + outer(diag(sim), rep(1,n))))
 D = as.dist(D)
 MDS = cmdscale(D)
+red = party == 'R'
+blue = party == 'D'
 @
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=10, height=7>>=
+plot(MDS[,1], MDS[,2], xlab='Score 1', ylab='Score 2')
+points(MDS[red,1], MDS[red,2], pch=23, bg='red')
+points(MDS[blue,1], MDS[blue,2], pch=23, bg='blue')
+@
+\caption{(Problem 2.b) Voters' votes graphed along the two MDS dimensions computed}
+\end{center}
+\end{figure} 
 
 \subsubsection*{c}
 %%%% for pca, import library, and follow examples pretty much
+<<>>=
+pcomps = prcomp(Av)
+@
 
+The graph of the points along the first two PCA dimensions looks nearly identical to the graph of the MDS components, except that the second component for PCA is flipped the opposite direction. 
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=10, height=7>>=
+plot(pcomps$x[,1], pcomps$x[,2])
+points(pcomps$x[blue,1], pcomps$x[blue,2], pch=23, bg='blue')
+points(pcomps$x[red,1], pcomps$x[red,2], pch=23, bg='red')
+@
+\caption{(Problem 2.c) Voters' votes graphed along the two top PCA dimensions computed}
+\end{center}
+\end{figure} 
 
 \subsubsection*{d}
+
+<<>>=
+n = nrow(Av)
+d = mat.or.vec(n,n)
+for(i in 1:n) {
+for(j in 1:n) {
+cmp = Av[i,] != Av[j,]
+cmp = as.numeric(cmp)
+d[i,j] = sum(cmp)
+}
+}
+mds = cmdscale(d)
+@
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=10, height=7>>=
+plot(mds[,1], mds[,2], xlab='Score 1', ylab='Score 2')
+points(mds[red,1], mds[red,2], pch=23, bg='red')
+points(mds[blue,1], mds[blue,2], pch=23, bg='blue')
+@
+\caption{(Problem 2.d) Voters' votes graphed along the two MDS dimensions computed with the Hamming distance}
+\end{center}
+\end{figure} 
 
 
 \subsubsection*{e}
 
+Because the Simple Matching Coefficient is bound between 1 and 0, we can get a measure of dissimilarity between x and y by simply computing $1 - SMC(x,y)$. 
+
+<<>>=
+n = nrow(Av)
+c = ncol(Av)
+d = mat.or.vec(n,n)
+for(i in 1:n) {
+for(j in 1:n) {
+cmp = Av[i,] == Av[j,]
+cmp = as.numeric(cmp)
+d[i,j] = 1 - (sum(cmp)/c)
+}
+}
+mds = cmdscale(d)
+@
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=10, height=7>>=
+plot(mds[,1], mds[,2], xlab='Score 1', ylab='Score 2')
+points(mds[red,1], mds[red,2], pch=23, bg='red')
+points(mds[blue,1], mds[blue,2], pch=23, bg='blue')
+@
+\caption{(Problem 2.e) Voters' votes graphed along the two MDS dimensions computed with a dissimilarity measure based on the Simple Matching Coefficient}
+\end{center}
+\end{figure} 
+
 \section*{Problem 3}
 
-%%%%%%%%%%%%% 
+<<>>=
+A = read.table('health.csv', sep=",", header=TRUE)
+As = A[sample(1:nrow(A), 2000), ]
+@
+
+\subsubsection*{b}
+
+<<>>=
+library(cluster)
+D = as.matrix(daisy(As))
+@
+
+\subsubsection*{c}
+
+<<>>=
+mds = cmdscale(D)
+newdata = cbind(As, mds)
+@
+
+As you can see in the figures below, the first MDS component nicely divides healthy by country. The second MDS component almost perfectly divides health statistics by sex. The 2 MDS components don't really nicely divide any other of the discrete variables. Included below are pairwise plots colored by "hungry" and "teeth" to illustrate this. Coloring by other discrete variables yields the same results, so I decided not to include the other plots in there for sake of space.
+
+There are a few samples which have "<NA>" for sex and aren't colored in the scatter plot.
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=8, height=8>>=
+pairs(newdata[,15:16], pch=21, bg=c("red","green","blue")[unclass(newdata$country)])
+@
+\caption{(Problem 3.c) Health data plotted by the first and second MDS components (1 and 2, respectively) colored by country}
+\end{center}
+\end{figure} 
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=8, height=8>>=
+pairs(newdata[,15:16], pch=21, bg=c("red","green")[unclass(newdata$sex)]) 
+@
+\caption{(Problem 3.c) Health data plotted by the first and second MDS components (1 and 2, respectively) colored by gender}
+\end{center}
+\end{figure} 
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=6, height=6>>=
+pairs(newdata[,15:16], pch=21, bg=c("pink","red","orange","yellow","green","blue")[unclass(newdata$hungry)])
+@
+\caption{(Problem 3.c) Health data plotted by the first and second MDS components (1 and 2, respectively) colored by hunger.}
+\end{center}
+\end{figure} 
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=6, height=6>>=
+pairs(newdata[,15:16], pch=21, bg=c("pink","red","orange","yellow","green","blue")[unclass(newdata$teeth)])
+@
+\caption{(Problem 3.c) Health data plotted by the first and second MDS components (1 and 2, respectively) colored by amount of teeth }
+\end{center}
+\end{figure} 
+
+\subsubsection*{d}
+
+<<>>=
+Asex = As[!is.na(As$sex),]
+D = as.matrix(daisy(Asex))
+mds = cmdscale(D)
+newdata = cbind(Asex, mds)
+@
+
+Without the NA sex values, the sex is much more cleanly divided by the second MDS component.
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=8, height=8>>=
+pairs(newdata[,15:16], pch=21, bg=c("red","green")[unclass(newdata$sex)]) 
+@
+\caption{(Problem 3.d) Health data with NA genders removed, plotted by the first and second MDS components (1 and 2, respectively) colored by gender}
+\end{center}
+\end{figure} 
+
+\subsubsection*{e}
+
+<<>>=
+Asex$sex <- ordered(Asex$sex)
+Asex$country <- ordered(Asex$country)
+Asex$hungry <- ordered(Asex$hungry)
+Asex$fruit <- ordered(Asex$fruit)
+Asex$vegetables <- ordered(Asex$vegetables)
+Asex$teeth <- ordered(Asex$teeth)
+Asex$hands_eating <- ordered(Asex$hands_eating)
+Asex$hands_toilet <- ordered(Asex$hands_toilet)
+Asex$hands_soap <- ordered(Asex$hands_soap)
+D = as.matrix(daisy(Asex))
+mds = cmdscale(D)
+newdata = cbind(Asex, mds)
+@
+
+As you can see in the charts for this problem, switching all of the discrete variables to ordinal variables changes the components found by MDS.
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=8, height=8>>=
+pairs(newdata[,15:16], pch=21, bg=c("red","green")[unclass(newdata$sex)]) 
+@
+\caption{(Problem 3.e) Health data colored by gender with all discrete variables switched to ordinal}
+\end{center}
+\end{figure} 
+
+\begin{figure}
+\begin{center}
+<<fig=true, width=8, height=8>>=
+pairs(newdata[,15:16], pch=21, bg=c("red","green","blue")[unclass(newdata$country)])
+@
+\caption{(Problem 3.e) Health data colored by country with all discrete variables switched to ordinal}
+\end{center}
+\end{figure} 
 
 
 \section*{Problem 4}
 
+It would seem that this measure of dissimilarity $d_{L,_p}(x,y)$ is measuring the degree to which adjacent components in $(x-y)$ differ. Each row $i$ in the column vector $L(x-y)$ will simply contain $(x_i - y_i) - (x_{i+1} - y_{i+1})$, i.e. the difference between adjacent components in $x-y$. With $p=1$, once we compute the column vector $L(x-y)$, we simply take the sum of the absolute values of each component. So, this measure would be a simple measure of difference between adjacent components in $x-y$. If x and y were in a time series, then this dissimilarity would capture when distinct components have shifted, but not all components have shifted at once. 
 
+\subsubsection*{b}
 
+Two vectors that would be highly dissimilar with this measure would be $a = [100, 0, 100, 0, 100, 0, 100, .......]$ and $b = [0, 100, 0, 100, 0, 100, 0, ......]$. The code below computes the distance between them:
+
+<<>>=
+L = mat.or.vec(99, 100)
+a = mat.or.vec(100, 1)
+b = mat.or.vec(100, 1)
+for(i in 1:99){
+L[i,i] = 1
+L[i,i+1] = -1
+}
+for(i in 1:100){
+if(i %% 2 == 0) a[i] = 100
+if(i %% 2 == 1) b[i] = 100
+}
+### now finally, compute the dissimilarity between a and b
+sum(abs(L %*% (a-b)))
+@
+
+\subsubsection*{c}
+
+The two vectors $a = [100, 100, 100, 100, 100, ...]$ and $b = [-100, -100, -100, -100, ...]$ would be highly similar by this measure (in fact, identical by this measure).
+
+<<>>=
+a = mat.or.vec(100, 1)
+b = mat.or.vec(100, 1)
+a = a + 100
+b = b - 100
+sum(abs(L %*% (a-b)))
+@
+
+\subsubsection*{d}
+
+Yes, the two vectors I used in part c are identical by this measure but very different by the usual euclidian distance. The euclidian distance between a and b is calculated below:
+
+<<>>=
+#euclidian distance
+sqrt(sum( (abs(a-b))^2 ))
+@
 
 
 \end{document}
