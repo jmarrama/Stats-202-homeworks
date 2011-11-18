@@ -18,8 +18,82 @@
 
 <<>>=
 library('ElemStatLearn')
+library(MASS)
+shuffleInd = sample(1:nrow(spam), nrow(spam))
+trainInd = ceiling(2*nrow(spam)/3)
+spamTrain = spam[shuffleInd[1:trainInd],]
+spamTest = spam[shuffleInd[(trainInd +1):length(shuffleInd)], ]
 
+### now, fit an lda model
+spam.lda = lda(spamTrain[, 1:(ncol(spamTrain)-1)], spamTrain$spam)
 @
+
+\subsubsection*{b}
+
+<<>>=
+predicted = predict(spam.lda, newdata=spamTest[,1:(ncol(spamTest)-1)])
+computeSpamConfusion <- function(spamTest, predicted){
+tn = sum(as.numeric(predicted$class == 'spam' & predicted$class == spamTest$spam))
+tp = sum(as.numeric(predicted$class == 'email' & predicted$class == spamTest$spam))
+fp = sum(as.numeric(predicted$class == 'email' & predicted$class != spamTest$spam))
+fn = sum(as.numeric(predicted$class == 'spam' & predicted$class != spamTest$spam))
+cm = matrix(c(tp, fp, fn, tn), 2)
+return (cm)
+}
+### actually compute confusion matrix now
+computeSpamConfusion(spamTest, predicted)
+@
+
+\subsubsection*{c}
+
+<<>>=
+spam.qda = qda(spamTrain[, 1:(ncol(spamTrain)-1)], spamTrain$spam)
+predicted = predict(spam.qda, newdata=spamTest[,1:(ncol(spamTest)-1)])
+computeSpamConfusion(spamTest, predicted)
+@
+
+\subsubsection*{d}
+<<>>=
+Y = spamTrain$spam == 'spam' 
+X = spamTrain[ , 1:(ncol(spamTrain) - 1)] 
+X = as.matrix(X)
+spam.lr = glm(Y ~ X, family=binomial())
+@
+
+\subsubsection*{e}
+<<>>=
+lda.misclass = mat.or.vec(10,1)
+qda.misclass = mat.or.vec(10,1)
+lr.misclass = mat.or.vec(10,1)
+for(i in 1:10){
+shuffleInd = sample(1:nrow(spam), nrow(spam))
+trainInd = ceiling(2*nrow(spam)/3)
+spamTrain = spam[shuffleInd[1:trainInd],]
+spamTest = spam[shuffleInd[(trainInd +1):length(shuffleInd)], ]
+
+### now, fit models
+spam.lda = lda(spamTrain[, 1:(ncol(spamTrain)-1)], spamTrain$spam)
+spam.qda = qda(spamTrain[, 1:(ncol(spamTrain)-1)], spamTrain$spam)
+
+### compute misclass error
+lda.pred = predict(spam.lda, newdata=spamTest[,1:(ncol(spamTest)-1)])
+qda.pred = predict(spam.qda, newdata=spamTest[,1:(ncol(spamTest)-1)])
+lda.conf = computeSpamConfusion(spamTest, lda.pred)
+qda.conf = computeSpamConfusion(spamTest, qda.pred)
+
+### put misclass error in 
+lda.misclass[i] = (lda.conf[2,1] + lda.conf[1,2])/sum(sum(lda.conf))
+qda.misclass[i] = (qda.conf[2,1] + qda.conf[1,2])/sum(sum(qda.conf))
+}
+
+### 
+mean(lda.misclass)
+mean(qda.misclass)
+@
+
+
+\section*{Problem 2}
+
 
 
 \end{document}
