@@ -1,0 +1,48 @@
+\documentclass{report}
+\usepackage[latin1]{inputenc}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+%\usepackage{cancel}
+\usepackage[top=3.5cm,left=3cm,right=3cm,bottom=2cm,foot=1cm]{geometry}
+\renewcommand{\thesection}{\arabic{section}}
+
+\title{\textbf{Stats 202} \\ Homework 4}
+\author{\textbf{Joseph Marrama}}
+\date{November 18, 2011}
+
+\begin{document}
+\maketitle
+
+\section*{Problem 1}
+
+<<>>=
+library('ElemStatLearn')
+
+@
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
